@@ -1,0 +1,97 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNhfUC9kC5U/uFNskZ4Nscw",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/aanisgopro99-coder/titanic_sett.py/blob/main/sentimental%20prediction%20modules%20\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "APxyg3FCUYI6"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer as Vectorizer\n",
+        "import re\n",
+        "df=pd.read_csv(\"/content/df.csv\")\n",
+        "train_df=pd.read_csv(\"/content/train_df.csv\")\n",
+        "valid_df=pd.read_csv(\"/content/valid_df.csv\")\n",
+        "\n",
+        "full_df=pd.concat([train_df,df])\n",
+        "full_df = full_df.dropna(subset=[\"clean_text\"])\n",
+        "full_df = full_df.drop_duplicates(subset=[\"clean_text\", \"sentiment\"])\n",
+        "\n",
+        "\n",
+        "Vectorizer = Vectorizer(stop_words=\"english\")\n",
+        "\n",
+        "\n",
+        "def clean_text(text):\n",
+        "  text=text.lower()\n",
+        "  text=re.sub(r\"[^\\w\\s]\", \" \", text)\n",
+        "  text = \" \".join(text.split())\n",
+        "  return text\n",
+        "  full_df[\"clean_text\"]=full_df[\"clean_text\"].apply(clean_text)\n",
+        "print(full_df)\n",
+        "full_df[\"sentiment\"]=full_df[\"sentiment\"].str.lower()\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.svm import LinearSVC\n",
+        "from sklearn.naive_bayes import MultinomialNB\n",
+        "from sklearn.metrics import accuracy_score,confusion_matrix,classification_report\n",
+        "\n",
+        "\n",
+        "x = Vectorizer.fit_transform(full_df[\"clean_text\"])\n",
+        "y = full_df[\"sentiment\"]\n",
+        "\n",
+        "x_train, x_temp, y_train, y_temp = train_test_split(\n",
+        "    x, y, test_size=0.3, random_state=42\n",
+        ")\n",
+        "\n",
+        "x_valid, x_test, y_valid, y_test = train_test_split(\n",
+        "    x_temp, y_temp, test_size=0.5, random_state=42\n",
+        ")\n",
+        "\n",
+        "\n",
+        "models = {\n",
+        "    \"Naive Bayes\": MultinomialNB(),\n",
+        "    \"Logistic Regression\": LogisticRegression(max_iter=1000),\n",
+        "    \"SVM\": LinearSVC()\n",
+        "}\n",
+        "\n",
+        "\n",
+        "for name, model in models.items():\n",
+        "    print(f\"\\n===== {name} =====\")\n",
+        "\n",
+        "    model.fit(x_train, y_train)\n",
+        "    y_pred = model.predict(x_valid)\n",
+        "\n",
+        "    print(\"Accuracy:\", accuracy_score(y_valid, y_pred))\n",
+        "    print(classification_report(y_valid, y_pred))"
+      ]
+    }
+  ]
+}
