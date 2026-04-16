@@ -1,0 +1,161 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNhfUC9kC5U/uFNskZ4Nscw",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/aanisgopro99-coder/titanic_sett.py/blob/main/sentimental%20prediction%20module%20\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 28,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "APxyg3FCUYI6",
+        "outputId": "cc862a6d-6f8e-4942-f069-9055711e490d"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "    sentiment                                         clean_text\n",
+            "0    Positive  i am coming to the borders and i will kill you...\n",
+            "1    Positive  im getting on borderlands and i will kill you all\n",
+            "2    Positive  im coming on borderlands and i will murder you...\n",
+            "3    Positive  im getting on borderlands 2 and i will murder ...\n",
+            "4    Positive  im getting into borderlands and i can murder y...\n",
+            "..        ...                                                ...\n",
+            "389  negative  according to a quarter of families under six l...\n",
+            "390  negative      the plan to not spend money is not going well\n",
+            "391   neutral    uploading all my bamboozle pictures of facebook\n",
+            "392  positive  congratulations you guys finish a month early ...\n",
+            "393  negative  actually i wish i was back in tahoe i miss it ...\n",
+            "\n",
+            "[66957 rows x 2 columns]\n",
+            "\n",
+            "===== Naive Bayes =====\n",
+            "Accuracy: 0.7880326563122262\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "    negative       0.80      0.78      0.79      3099\n",
+            "     neutral       0.75      0.87      0.81      4191\n",
+            "    positive       0.85      0.67      0.75      2754\n",
+            "\n",
+            "    accuracy                           0.79     10044\n",
+            "   macro avg       0.80      0.77      0.78     10044\n",
+            "weighted avg       0.79      0.79      0.79     10044\n",
+            "\n",
+            "\n",
+            "===== Logistic Regression =====\n",
+            "Accuracy: 0.811031461569096\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "    negative       0.83      0.81      0.82      3099\n",
+            "     neutral       0.79      0.86      0.83      4191\n",
+            "    positive       0.82      0.74      0.78      2754\n",
+            "\n",
+            "    accuracy                           0.81     10044\n",
+            "   macro avg       0.82      0.80      0.81     10044\n",
+            "weighted avg       0.81      0.81      0.81     10044\n",
+            "\n",
+            "\n",
+            "===== SVM =====\n",
+            "Accuracy: 0.874452409398646\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "    negative       0.88      0.88      0.88      3099\n",
+            "     neutral       0.87      0.89      0.88      4191\n",
+            "    positive       0.87      0.85      0.86      2754\n",
+            "\n",
+            "    accuracy                           0.87     10044\n",
+            "   macro avg       0.87      0.87      0.87     10044\n",
+            "weighted avg       0.87      0.87      0.87     10044\n",
+            "\n"
+          ]
+        }
+      ],
+      "source": [
+        "import pandas as pd\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer as Vectorizer\n",
+        "import re\n",
+        "df=pd.read_csv(\"/content/df.csv\")\n",
+        "train_df=pd.read_csv(\"/content/train_df.csv\")\n",
+        "valid_df=pd.read_csv(\"/content/valid_df.csv\")\n",
+        "\n",
+        "full_df=pd.concat([train_df,df])\n",
+        "full_df = full_df.dropna(subset=[\"clean_text\"])\n",
+        "full_df = full_df.drop_duplicates(subset=[\"clean_text\", \"sentiment\"])\n",
+        "\n",
+        "\n",
+        "Vectorizer = Vectorizer(stop_words=\"english\")\n",
+        "\n",
+        "\n",
+        "def clean_text(text):\n",
+        "  text=text.lower()\n",
+        "  text=re.sub(r\"[^\\w\\s]\", \" \", text)\n",
+        "  text = \" \".join(text.split())\n",
+        "  return text\n",
+        "  full_df[\"clean_text\"]=full_df[\"clean_text\"].apply(clean_text)\n",
+        "print(full_df)\n",
+        "full_df[\"sentiment\"]=full_df[\"sentiment\"].str.lower()\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.svm import LinearSVC\n",
+        "from sklearn.naive_bayes import MultinomialNB\n",
+        "from sklearn.metrics import accuracy_score,confusion_matrix,classification_report\n",
+        "\n",
+        "\n",
+        "x = Vectorizer.fit_transform(full_df[\"clean_text\"])\n",
+        "y = full_df[\"sentiment\"]\n",
+        "\n",
+        "x_train, x_temp, y_train, y_temp = train_test_split(\n",
+        "    x, y, test_size=0.3, random_state=42\n",
+        ")\n",
+        "\n",
+        "x_valid, x_test, y_valid, y_test = train_test_split(\n",
+        "    x_temp, y_temp, test_size=0.5, random_state=42\n",
+        ")\n",
+        "\n",
+        "\n",
+        "models = {\n",
+        "    \"Naive Bayes\": MultinomialNB(),\n",
+        "    \"Logistic Regression\": LogisticRegression(max_iter=1000),\n",
+        "    \"SVM\": LinearSVC()\n",
+        "}\n",
+        "\n",
+        "\n",
+        "for name, model in models.items():\n",
+        "    print(f\"\\n===== {name} =====\")\n",
+        "\n",
+        "    model.fit(x_train, y_train)\n",
+        "    y_pred = model.predict(x_valid)\n",
+        "\n",
+        "    print(\"Accuracy:\", accuracy_score(y_valid, y_pred))\n",
+        "    print(classification_report(y_valid, y_pred))"
+      ]
+    }
+  ]
+}
