@@ -1,4 +1,4 @@
-# Titanic Survival Prediction
+﻿# Titanic Survival Prediction
 
 A machine-learning classification project exploring passenger survival in the Titanic dataset.
 
